@@ -4,6 +4,8 @@ https://github.com/PRosenb/EEPROMWearLevel
 `EEPROMWearLevel` bases on the [EEPROM library](https://www.arduino.cc/en/Reference/EEPROM) included in the Arduino framework.  
 It reduces `EEPROM` wear by writing every new value to an other `EEPROM` location.  
 
+This fork adds an array write/read interface.
+
 To do this, the current position needs to be stored at a known location.  
 A single bit on `EEPROM` can only be changed from `1` to `0`. To change bits from `0` to `1`, the whole byte has to be erased what changes all bits to `1`. This erase process causes the main wear on the `EEPROM`.  
 `EEPROMWearLevel` uses control bytes to remember the current position when doing wear levelling and reduces wear of the control bytes by writing single bits from `1` to `0`.  

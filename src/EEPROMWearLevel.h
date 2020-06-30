@@ -143,6 +143,77 @@ class EEPROMWearLevel: EEPROMClass {
     }
 
     /**
+        reads the last written value of idx or leaves the array unchanged if no
+        value written yet.
+        Returns true if value exists.
+    */
+    bool getArray(const int idx, uint8_t* t, const uint8_t dataLength) {
+#ifndef NO_RANGE_CHECK
+        if (idx >= amountOfIndexes) {
+            logOutOfRange(idx);
+            return false;
+        }
+#endif
+        const int lastIndex = eepromConfig[idx].lastIndexRead;
+        if (lastIndex != NO_DATA) {
+            // +1 because it is the last index
+            const int firstIndex = lastIndex + 1 - dataLength;
+#ifndef NO_EEPROM_WRITES
+            for (uint8_t i = 0; i < dataLength; i++) {
+                t[i] = EEPROMClass::read(firstIndex + i);
+            }
+#else
+            for (uint8_t i = 0; i < dataLength; i++) {
+                t[i] = fakeEeprom[firstIndex + i];
+            }
+#endif
+
+            return true;
+        }
+        else {
+#ifdef DEBUG_LOG
+            Serial.println(F("no data"));
+#endif
+        }
+        return false;
+    }
+    /**
+      write array to idx. If update is true, writting is only done
+      if the previous value was different.
+   */
+    void putArray(const int idx, uint8_t* t, const int dataLength)
+    {
+#ifndef NO_RANGE_CHECK
+        if (idx >= amountOfIndexes) {
+            logOutOfRange(idx);
+            Serial.println(F("logOutOfRange"));
+
+            return;
+        }
+#endif
+        const int controlBytesCount = getControlBytesCount(idx);
+
+        const int writeStartIndex = getWriteStartIndex(idx, dataLength, t, true, controlBytesCount);
+        if (writeStartIndex < 0) {
+            return;
+        }
+#ifndef NO_EEPROM_WRITES
+        for (uint8_t i = 0; i < dataLength; i++) {
+            EEPROMClass::update(writeStartIndex + i, t[i]);
+        }
+#else
+        for (int i = 0; i < dataLength; i++) {
+            fakeEeprom[writeStartIndex + i] = t[i];
+            Serial.print("Writing ");
+            Serial.print(i);
+            Serial.print('\t');
+            Serial.println(t[i]);
+        }
+#endif
+        updateControlBytes(idx, writeStartIndex, dataLength, controlBytesCount);
+    }
+
+    /**
         returns the first index used to store data for this idx.
         This method can be called to use EEPROMWEarLevel as a ring buffer.
     */
