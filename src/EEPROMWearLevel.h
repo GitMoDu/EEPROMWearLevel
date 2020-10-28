@@ -186,8 +186,9 @@ class EEPROMWearLevel: EEPROMClass {
 #ifndef NO_RANGE_CHECK
         if (idx >= amountOfIndexes) {
             logOutOfRange(idx);
+#ifdef DEBUG_LOG
             Serial.println(F("logOutOfRange"));
-
+#endif
             return;
         }
 #endif
